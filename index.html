@@ -1,0 +1,190 @@
+<html>
+    <head>
+        <title>D3 Maps Test</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link 
+            rel="stylesheet" 
+            href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+            integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" 
+            crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=Sen&display=swap" rel="stylesheet">
+        <style>
+            body {
+                padding: 0;
+                margin: 0;
+                background: white;
+                font-family: 'Sen', 'sans-serif';
+            }
+            div#controls {
+                text-align: center;
+            }
+            input#time-slider {
+                width: 50%;
+                -webkit-appearance: none;
+                padding-bottom: 20px;
+            }
+            input#time-slider:focus {
+                outline: none;
+            }
+            input#time-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                margin-top: -9px;
+                width: 8px;
+                height: 24px;
+                background: #ccf2ff;
+            }
+            input#time-slider::-webkit-slider-runnable-track {
+                background: #eee;
+                height: 6px;
+            }
+
+            #header {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+            }
+
+            button {
+                background-color: #dedede;
+                color: #535353;
+                font-weight: bold;
+                border-radius: 4px;
+                border-width: none;
+                border-style: none;
+                padding: 5px 20px;
+                text-transform: uppercase;
+            }
+            button:hover {
+                outline: none;
+                background-color: #bcbcbc;
+            }
+            input#spin-globe-check {
+                background: #eee;
+                width: 16px;
+                height: 16px;
+            }
+            #controls {
+                margin: 0px 0px 20px 0px;
+            }
+            #footer {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+        <script src="http://d3js.org/d3.v5.min.js"></script>
+        <script src="https://d3js.org/d3-geo.v1.min.js"></script>
+        <script src="http://d3js.org/topojson.v0.min.js"></script> 
+        <script src="CovidMapView.js"></script>
+        <div id='header'>
+            <h1>COVID-19 Map</h1>
+            <div>Data from Johns Hopkins <a href="https://github.com/CSSEGISandData/COVID-19" target="__blank">GitHub repo</a></div>
+        </div>
+        <div id="map-container"></div>
+        <div id="content">
+            <div id="controls">
+                <input type="range" id="time-slider" min="0" max="1" value="1" step="0.001">
+                <div>
+                    <button id="play-pause-btn">Play Data</button>
+                    <button id="reset-view">Reset View</button>
+                    <input type='checkbox' checked='true' id='spin-globe-check'> Spin Globe
+                </div>
+            </div>
+            <div id='footer'>Last updated: <span id='last-update'></span></div>
+        </div>  
+        <script>
+            let width = window.innerWidth;
+            let height = window.innerHeight*0.8;
+
+            let mapView = new CovidMapView("#map-container", width, height)
+
+            let playbackRunning = false;
+            let playbackTime = 1.0;
+
+            let previousTime = 0
+            let spin = 0
+            let spinning = true
+            let mouseDownPosition = null
+            let mouseDownRotation = null
+
+            mapView.setRotation([0, -30, 0])
+
+            $('#play-pause-btn').click(function() {
+                playbackRunning = !playbackRunning
+                if (playbackRunning) {
+                    $('#play-pause-btn').text('Pause Data')
+                } else {
+                    $('#play-pause-btn').text('Resume Data')
+                }
+            });
+
+            $('#reset-view').click(function() {
+                spin = 0
+                mapView.setRotation([0,0,0])
+            })
+
+            $('#spin-globe-check').change(function() {
+                spinning = this.checked
+                if (spinning) spin = mapView.getRotation()[0]
+            });
+
+            $('#map-container').on('mousedown', function(e) {
+                spinning = false
+                mouseDownPosition = [e.clientX, e.clientY]
+                mouseDownRotation = mapView.getRotation()
+            });
+
+            $('#map-container').on('mousemove', function(e) {
+                if (!spinning && mouseDownPosition != null) {
+                    let deltaX = e.clientX - mouseDownPosition[0]
+                    let deltaY = e.clientY - mouseDownPosition[1]
+                    mapView.setRotation([mouseDownRotation[0] + deltaX*0.2, mouseDownRotation[1] - deltaY*0.2, mouseDownRotation[2]])
+                }
+            });
+
+            $('#map-container').on('mouseup', function(e) {
+                mouseDownPosition = null
+                spinning = $('#spin-globe-check')[0].checked
+                spin = mapView.getRotation()[0]
+            });
+            
+            Promise.all([
+                d3.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"),
+                d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+            ])
+                .then(function(results) {
+                    let covid19 = results[0]
+                    let world_map = results[1]
+                    $('#last-update').text(covid19.columns[covid19.columns.length-1])
+                    mapView.setWorld(world_map)
+                    let anim = d3.timer(function(elapsed) {
+                        if (previousTime == 0) previousTime = elapsed
+                        let delta = elapsed - previousTime
+                        previousTime = elapsed
+
+                        mapView.setCovidData(covid19)
+                        if (playbackRunning) {
+                            playbackTime += delta * 2e-4
+                            if (playbackTime > 1) playbackTime = 0
+                            $('#time-slider').val(playbackTime)
+                        } else {
+                            playbackTime = parseFloat($('#time-slider').val())
+                        }
+                        mapView.setTime(playbackTime)
+                        let rot = mapView.getRotation();
+                        if (spinning) {
+                            spin += 1e-2 * delta
+                            mapView.setRotation([spin, rot[1], rot[2]])
+                        }
+                        mapView.render()
+                    })
+                });
+            
+        </script>
+    </body>
+</html>
