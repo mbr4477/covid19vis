@@ -10,15 +10,18 @@ class CovidMapView {
         this.height = height;
         this.time = 0.0;
         this.rotation = [0,0,0]
+        this.zoom = 0.35
+
+        this.constrainingDimension = (width < height) ? width : height;
 
         this.projection = d3.geoOrthographic()
-            .scale(height * 0.4)
+            .scale(this.constrainingDimension * this.zoom)
             .precision(0.1)
             .clipAngle(90)
             .translate([width / 2, height / 2]);
 
         this.barProjection = d3.geoOrthographic()
-            .scale(height * 0.4)
+            .scale(this.constrainingDimension * this.zoom)
             .precision(0.1)
             .clipAngle(90)
             .translate([width / 2, height / 2]);
@@ -84,7 +87,7 @@ class CovidMapView {
             let count = this.covidData[i][columns[timeColumn + 4]]
             let radius = Math.log(count) * 10
             radius = count * 0.05;
-            this.barProjection.scale(height * 0.4 + radius)
+            this.barProjection.scale(this.constrainingDimension * this.zoom + radius)
             let start, end
             if (isBgLayer) {
                 start = this.projection([ this.covidData[i]['Long'], this.covidData[i]['Lat'] ]);

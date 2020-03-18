@@ -8,70 +8,7 @@
             integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" 
             crossorigin="anonymous">
         <link href="https://fonts.googleapis.com/css?family=Sen&display=swap" rel="stylesheet">
-        <style>
-            body {
-                padding: 0;
-                margin: 0;
-                background: white;
-                font-family: 'Sen', 'sans-serif';
-            }
-            div#controls {
-                text-align: center;
-            }
-            input#time-slider {
-                width: 50%;
-                -webkit-appearance: none;
-                padding-bottom: 20px;
-            }
-            input#time-slider:focus {
-                outline: none;
-            }
-            input#time-slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                margin-top: -9px;
-                width: 8px;
-                height: 24px;
-                background: #ccf2ff;
-            }
-            input#time-slider::-webkit-slider-runnable-track {
-                background: #eee;
-                height: 6px;
-            }
-
-            #header {
-                position: absolute;
-                top: 20px;
-                left: 20px;
-            }
-
-            button {
-                background-color: #dedede;
-                color: #535353;
-                font-weight: bold;
-                border-radius: 4px;
-                border-width: none;
-                border-style: none;
-                padding: 5px 20px;
-                text-transform: uppercase;
-            }
-            button:hover {
-                outline: none;
-                background-color: #bcbcbc;
-            }
-            input#spin-globe-check {
-                background: #eee;
-                width: 16px;
-                height: 16px;
-            }
-            #controls {
-                margin: 0px 0px 20px 0px;
-            }
-            #footer {
-                position: absolute;
-                bottom: 10px;
-                right: 10px;
-            }
-        </style>
+        <link href="style.css" rel="stylesheet">
     </head>
     <body>
         <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
@@ -80,16 +17,19 @@
         <script src="https://d3js.org/d3.v5.min.js"></script>
         <script src="https://d3js.org/d3-geo.v1.min.js"></script>
         <script src="https://d3js.org/topojson.v0.min.js"></script> 
+        <div id="map-container"></div>
         <script src="CovidMapView.js"></script>
         <div id='header'>
             <h1>COVID-19 Map</h1>
             <div>Data from Johns Hopkins <a href="https://github.com/CSSEGISandData/COVID-19" target="__blank">GitHub repo</a></div>
         </div>
-        <div id="map-container"></div>
+        <div id='total-cases-widget'>
+            <h1 id='total-cases'></h1> confirmed cases
+        </div>
         <div id="content">
             <div id="controls">
                 <input type="range" id="time-slider" min="0" max="1" value="1" step="0.001">
-                <div>
+                <div id="row2">
                     <button id="play-pause-btn">Play Data</button>
                     <button id="reset-view">Reset View</button>
                     <input type='checkbox' checked='true' id='spin-globe-check'> Spin Globe
@@ -97,9 +37,10 @@
             </div>
             <div id='footer'>Last updated: <span id='last-update'></span></div>
         </div>  
+
         <script>
             let width = window.innerWidth;
-            let height = window.innerHeight*0.8;
+            let height = window.innerHeight;
 
             let mapView = new CovidMapView("#map-container", width, height)
 
@@ -161,6 +102,11 @@
                     let covid19 = results[0]
                     let world_map = results[1]
                     $('#last-update').text(covid19.columns[covid19.columns.length-1])
+                    let total = 0
+                    for (let row = 0; row < covid19.length; row++) {
+                        total += parseInt(covid19[row][covid19.columns[covid19.columns.length-1]]);
+                    }
+                    $('#total-cases').text(total.toLocaleString())
                     mapView.setWorld(world_map)
                     let anim = d3.timer(function(elapsed) {
                         if (previousTime == 0) previousTime = elapsed
