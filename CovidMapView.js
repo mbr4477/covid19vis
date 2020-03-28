@@ -86,7 +86,7 @@ class CovidMapView {
         for (let i = 0; i < this.covidData.length; i++) {
             let count = this.covidData[i][columns[timeColumn + 4]]
             let radius = Math.log(count) * 10
-            radius = count * 0.05;
+            radius = count * 0.01;
             this.barProjection.scale(this.constrainingDimension * this.zoom + radius)
             let start, end
             if (isBgLayer) {

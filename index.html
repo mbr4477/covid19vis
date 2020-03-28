@@ -9,7 +9,6 @@
             crossorigin="anonymous">
         <link href="https://fonts.googleapis.com/css?family=Sen&display=swap" rel="stylesheet">
         <link href="style.css" rel="stylesheet">
-        <link href="/style.css" rel="stylesheet">
     </head>
     <body>
         <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
@@ -96,7 +95,7 @@
             });
             
             Promise.all([
-                d3.csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"),
+                d3.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"),
                 d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
             ])
                 .then(function(results) {
